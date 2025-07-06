@@ -1,0 +1,40 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  password String
+  threads  ThreadParticipant[]
+  messages Message[]
+}
+
+model Thread {
+  id            Int                   @id @default(autoincrement())
+  messages      Message[]
+  participants  ThreadParticipant[]
+}
+
+model ThreadParticipant {
+  id       Int    @id @default(autoincrement())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int
+  thread   Thread @relation(fields: [threadId], references: [id])
+  threadId Int
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  Int
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  threadId  Int
+}
