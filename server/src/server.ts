@@ -6,7 +6,8 @@ import {PrismaClient} from '@prisma/client';
 import {z} from 'zod';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import {eventEmitter, eventIterator, publishNewMessage} from "./EventEmitter";
+import { on } from 'events';
+import {eventEmitter, publishNewMessage} from "./EventEmitter";
 
 
 const prisma = new PrismaClient();
@@ -117,20 +118,17 @@ export const appRouter = t.router({
     messageStream: t.procedure
         .input(z.object({ threadId: z.number() }))
         .subscription(({ input }) => {
-            const iter = eventIterator<
-                Awaited<ReturnType<typeof prisma.message.create>>
-            >(eventEmitter, 'new-message');
+            const rawIter = on(eventEmitter, 'new-message') as AsyncIterableIterator<[Awaited<ReturnType<typeof prisma.message.create>>]>;
 
             return (async function* () {
-                for await (const msg of iter) {
+                for await (const [msg] of rawIter) {
+                    // TS will treat `msg` as `any`, but you know it's a Message
                     if (msg.threadId === input.threadId) {
                         yield msg;
                     }
                 }
             })();
         }),
-
-
 
 });
 

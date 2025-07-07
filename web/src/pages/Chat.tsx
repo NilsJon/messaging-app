@@ -81,7 +81,6 @@ export default function Chat({ userId }: Props) {
                 })}
             </aside>
 
-            {/* Chat view */}
             <section className="flex flex-1 flex-col">
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {selectedThread?.messages.map(m => (
